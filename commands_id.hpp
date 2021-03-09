@@ -1,0 +1,245 @@
+#pragma once
+
+#include <cstdint>
+
+#define CEPTOR_VALID_HANDLE( h )	( ( ( ( std::uint64_t )h >> 20 ) & 0xFFF ) == 0xF0F )
+
+enum IoControlCodes : std::uint32_t
+{
+	IOCTL_ATTACH_TO_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0000, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //-
+	IOCTL_READ_MEMORY_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0001, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //-
+	IOCTL_WRITE_MEMORY_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0002, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //-
+	IOCTL_QUERY_MEMORY_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0003, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ),  //-
+	IOCTL_QUERY_INFO_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0004, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ),  //-
+	IOCTL_QUERY_SYSTEM_INFO_EX = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0005, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_SET_INFORMATION_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0006, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_FLUSH_INSTRUCTION_CACHE = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0007, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_FLUSH_MEMORY_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0008, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_ALLOCATE_MEMORY_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0009, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //-
+	IOCTL_FREE_MEMORY_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0010, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //-
+	IOCTL_LOCK_MEMORY_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0011, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_UNLOCK_MEMORY_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0012, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_PROTECT_MEMORY_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0013, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //-
+	IOCTL_OPEN_THREAD = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0014, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_QUERY_THREAD_INFO = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0015, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_SET_THREAD_INFO = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0016, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_GET_CONTEXT_THREAD = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0017, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_SET_CONTEXT_THREAD = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0018, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_RESUME_THREAD = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0019, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_SUSPEND_THREAD = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0020, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_WAIT_FOR_OBJECT = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0021, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ), //
+	IOCTL_SUSPEND_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0022, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ),
+	IOCTL_RESUME_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0023, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ),
+	IOCTL_DETACH_FROM_PROCESS = CTL_CODE( FILE_DEVICE_UNKNOWN, 0x0024, METHOD_BUFFERED, FILE_SPECIAL_ACCESS ) //-
+};
+
+typedef struct _ATTACH_PROCESS
+{
+	std::uint64_t ProcessId;
+	std::uint64_t ThreadId;
+	std::uint64_t OutProcessHandle;
+
+} ATTACH_PROCESS, * PATTACH_PROCESS;
+
+typedef struct _DETACH_PROCESS
+{
+	std::uint64_t ProcessHandle;
+
+} DETACH_PROCESS, * PDETACH_PROCESS;
+
+typedef struct _ALLOCMEMORY_PROCESS
+{
+	std::uint64_t ProcessHandle;
+	std::uint64_t BaseAddress;
+	std::uint64_t Lenght;
+	std::uint32_t Type;
+	std::uint32_t Protect;
+
+} ALLOCMEMORY_PROCESS, * PALLOCMEMORY_PROCESS;
+
+typedef struct _FREEMEMORY_PROCESS
+{
+	std::uint64_t ProcessHandle;
+	std::uint64_t* BaseAddress;
+	std::uint64_t Lenght;
+	std::uint32_t Type;
+
+} FREEMEMORY_PROCESS, * PFREEMEMORY_PROCESS;
+
+typedef struct _LOCKMEMORY_PROCESS
+{
+	std::uint64_t ProcessHandle;
+	std::uint64_t* BaseAddress;
+	std::uint64_t Lenght;
+	std::uint32_t Option;
+
+} LOCKMEMORY_PROCESS, * PLOCKMEMORY_PROCESS;
+
+typedef struct _UNLOCKMEMORY_PROCESS
+{
+	std::uint64_t ProcessHandle;
+	std::uint64_t* BaseAddress;
+	std::uint64_t Lenght;
+	std::uint32_t Option;
+
+} UNLOCKMEMORY_PROCESS, * PUNLOCKMEMORY_PROCESS;
+
+typedef struct _READMEMORY_PROCESS
+{
+	std::uint64_t ProcessHandle;
+	std::uint64_t* BaseAddress;
+	std::uint64_t* Buffer;
+	std::uint64_t Lenght;
+	std::uint64_t* BytesRead;
+
+} READMEMORY_PROCESS, * PREADMEMORY_PROCESS;
+
+typedef struct _WRITEMEMORY_PROCESS
+{
+	std::uint64_t ProcessHandle;
+	std::uint64_t* BaseAddress;
+	std::uint64_t* Buffer;
+	std::uint64_t Lenght;
+	std::uint64_t* BytesWritten;
+
+} WRITEMEMORY_PROCESS, * PWRITEMEMORY_PROCESS;
+
+typedef struct _FLUSHCACHE_MEMORY_PROCESS
+{
+	std::uint64_t ProcessHandle;
+	std::uint64_t* BaseAddress;
+	std::uint32_t Lenght;
+
+} FLUSHCACHE_MEMORY_PROCESS, * PFLUSHCACHE_MEMORY_PROCESS;
+
+typedef struct _FLUSHVIRTUAL_MEMORY_PROCESS
+{
+	std::uint64_t ProcessHandle;
+	std::uint64_t* BaseAddress;
+	std::uint64_t Lenght;
+	PIO_STATUS_BLOCK IoStatus;
+
+} FLUSHVIRTUAL_MEMORY_PROCESS, * PFLUSHVIRTUAL_MEMORY_PROCESS;
+
+typedef struct _PROTECTMEMORY_PROCESS
+{
+	std::uint64_t ProcessHandle;
+	std::uint64_t* BaseAddress;
+	std::uint64_t Lenght;
+	std::uint32_t NewAccess;
+	std::uint32_t* OldAccess;
+
+} PROTECTMEMORY_PROCESS, * PPROTECTMEMORY_PROCESS;
+
+typedef struct _QUERYMEMORY_PROCESS
+{
+	std::uint64_t ProcessHandle;
+	std::uint64_t* BaseAddress;
+	std::uint32_t InformationClass;
+	std::uint64_t* Buffer;
+	std::uint64_t Lenght;
+	std::uint32_t* ResultLength;
+
+} QUERYMEMORY_PROCESS, * PQUERYMEMORY_PROCESS;
+
+typedef struct _QUERYINFO_PROCESS
+{
+	std::uint64_t ProcessHandle;
+	std::uint32_t InformationClass;
+	std::uint64_t* Buffer;
+	std::uint32_t Lenght;
+	std::uint32_t* ResultLength;
+
+} QUERYINFO_PROCESS, * PQUERYINFO_PROCESS;
+
+typedef struct _SETINFO_PROCESS
+{
+	std::uint64_t ProcessHandle;
+	std::uint32_t InformationClass;
+	std::uint64_t* Buffer;
+	std::uint32_t Lenght;
+
+} SETINFO_PROCESS, * PSETINFO_PROCESS;
+
+typedef struct _QUERY_SYSTEMINFOEX
+{
+	std::uint32_t InformationClass;
+	std::uint64_t* InputBuffer;
+	std::uint32_t InputBufferLenght;
+	std::uint64_t* SystemInfo;
+	std::uint32_t SystemInfoLenght;
+	std::uint32_t* ResultLength;
+
+} QUERY_SYSTEMINFOEX, * PQUERY_SYSTEMINFOEX;
+
+typedef struct _OPEN_THREAD_PROCESS
+{
+	std::uint64_t ProcessId;
+	std::uint64_t ThreadId;
+	std::uint64_t OutThreadHandle;
+
+} OPEN_THREAD_PROCESS, * POPEN_THREAD_PROCESS;
+
+typedef struct _SET_CONTEXT_THREAD_PROCESS
+{
+	std::uint64_t ThreadHandleValue;
+	PCONTEXT Context;
+	PCONTEXT Wow64Context;
+
+} SET_CONTEXT_THREAD_PROCESS, * PSET_CONTEXT_THREAD_PROCESS;
+
+typedef struct _GET_CONTEXT_THREAD_PROCESS
+{
+	std::uint64_t ThreadHandleValue;
+	PCONTEXT Context;
+	PCONTEXT Wow64Context;
+
+} GET_CONTEXT_THREAD_PROCESS, * PGET_CONTEXT_THREAD_PROCESS;
+
+typedef struct _SUSPEND_THREAD_PROCESS
+{
+	std::uint64_t ThreadHandleValue;
+	std::uint32_t* Count;
+
+} SUSPEND_THREAD_PROCESS, * PSUSPEND_THREAD_PROCESS;
+
+typedef struct _RESUME_THREAD_PROCESS
+{
+	std::uint64_t ThreadHandleValue;
+	std::uint32_t* Count;
+
+} RESUME_THREAD_PROCESS, * PRESUME_THREAD_PROCESS;
+
+typedef struct _QUERYINFO_THREAD_PROCESS
+{
+	std::uint64_t ThreadHandleValue;
+	std::uint32_t InformationClass;
+	std::uint64_t* ThreadInfo;
+	std::uint32_t ThreadInfoLenght;
+	std::uint32_t* ResultLenght;
+
+} QUERYINFO_THREAD_PROCESS, * PQUERYINFO_THREAD_PROCESS;
+
+typedef struct _SETINFO_THREAD_PROCESS
+{
+	std::uint64_t ThreadHandleValue;
+	std::uint32_t InformationClass;
+	std::uint64_t* ThreadInfo;
+	std::uint32_t ThreadInfoLenght;
+
+} SETINFO_THREAD_PROCESS, * PSETINFO_THREAD_PROCESS;
+
+typedef struct _WAIT_OBJECT_PROCESS
+{
+	std::uint64_t ObjectValue;
+	BOOLEAN Alertable;
+	PLARGE_INTEGER Timeout;
+
+} WAIT_OBJECT_PROCESS, * PWAIT_OBJECT_PROCESS;
+
+typedef struct _PROCESS_MISC
+{
+	std::uint64_t ProcessHandle;
+	BOOLEAN Suspend;
+
+} PROCESS_MISC, * PPROCESS_MISC;

@@ -1,0 +1,162 @@
+typedef struct _THREAD_CONTEXT_ARGS
+{
+	BOOLEAN Query;
+	THREADINFOCLASS InfoClass;
+	PVOID ThreadInfo;
+	ULONG ThreadInfoLenght;
+	PULONG ReturnLenght;
+	NTSTATUS Status;
+} THREAD_CONTEXT_ARGS, * PTHREAD_CONTEXT_ARGS;
+
+VOID NTAPI ApcExcInThreadCtx( PVOID Arg1, PVOID Arg2, PVOID Arg3 )
+{
+	UNREFERENCED_PARAMETER( Arg3 );
+
+	HANDLE Event = HANDLE( Arg1 );
+	PTHREAD_CONTEXT_ARGS Args = PTHREAD_CONTEXT_ARGS( Arg2 );
+
+	DBGPRINT( "%s %d : ApcExcInThreadCtx - Event: 0x%p - Args: 0x%p", __FUNCTION__, __LINE__, Event, Args );
+
+	if ( Args )
+	{
+		if ( Args->Query == TRUE )
+		{
+			Args->Status = ZwQueryInformationThread(
+				NtCurrentThread(),
+				Args->InfoClass,
+				Args->ThreadInfo,
+				Args->ThreadInfoLenght,
+				Args->ReturnLenght );
+		}
+		else
+		{
+			Args->Status = ZwSetInformationThread(
+				NtCurrentThread(),
+				Args->InfoClass,
+				Args->ThreadInfo,
+				Args->ThreadInfoLenght );
+		}
+
+		DBGPRINT( "%s %d : ApcExcInThreadCtx - Status: 0x%X", __FUNCTION__, __LINE__, Args->Status );
+	}
+
+	auto Status = ZwSetEvent( Event, nullptr );
+	DBGPRINT( "%s %d : ApcExcInThreadCtx - ZwSetEvent = 0x%X.", __FUNCTION__, __LINE__, Status );
+}
+
+VOID KernelApcInjectCallback(
+	PKAPC Apc,
+	PKNORMAL_ROUTINE* NormalRoutine,
+	PVOID* NormalContext,
+	PVOID* SystemArgument1,
+	PVOID* SystemArgument2
+)
+{
+	UNREFERENCED_PARAMETER( SystemArgument1 );
+	UNREFERENCED_PARAMETER( SystemArgument2 );
+	UNREFERENCED_PARAMETER( Apc );
+	UNREFERENCED_PARAMETER( NormalContext );
+
+	//DPRINT( "BlackBone: %s: Called. NormalRoutine = 0x%p\n", __FUNCTION__, *NormalRoutine );
+
+	// Skip execution
+	if ( PsIsThreadTerminating( PsGetCurrentThread() ) )
+		*NormalRoutine = NULL;
+
+	DBGPRINT( "%s %d : KernelApcInjectCallback called - NormalRoutine = 0x%p", __FUNCTION__, __LINE__, *NormalRoutine );
+
+	// Fix Wow64 APC
+	//if ( PsGetCurrentProcessWow64Process() != NULL )
+	//	PsWrapApcWow64Thread( NormalContext, ( PVOID* )NormalRoutine );
+	//ExFreePoolWithTag( Apc, BB_POOL_TAG );
+}
+
+VOID KernelApcPrepareCallback(
+	PKAPC Apc,
+	PKNORMAL_ROUTINE* NormalRoutine,
+	PVOID* NormalContext,
+	PVOID* SystemArgument1,
+	PVOID* SystemArgument2
+)
+{
+	UNREFERENCED_PARAMETER( Apc );
+	UNREFERENCED_PARAMETER( NormalRoutine );
+	UNREFERENCED_PARAMETER( NormalContext );
+	UNREFERENCED_PARAMETER( SystemArgument1 );
+	UNREFERENCED_PARAMETER( SystemArgument2 );
+
+	DBGPRINT( "%s %d : KernelApcPrepareCallback called", __FUNCTION__, __LINE__ );
+
+	// Alert current thread
+	KeTestAlertThread( UserMode );
+}
+
+/*HANDLE hSyncEvent{ };
+
+					Status = ZwCreateEvent( &hSyncEvent, GENERIC_READ, nullptr, NotificationEvent, FALSE );
+					if ( NT_SUCCESS( Status ) )
+					{
+						ExAcquireFastMutex( &ExpThreadContextQueryMutex );
+
+						DBGPRINT( "%s %d : IOCTL_QUERY_THREAD_INFO - KTHREAD: 0x%p", __FUNCTION__, __LINE__, Entry->Thread );
+
+						BOOLEAN bSkip = IsSkippabbleThread( Entry->Thread, Entry->Wow64 );
+						DBGPRINT( "%s %d : IOCTL_QUERY_THREAD_INFO - Should Skip? %d", __FUNCTION__, __LINE__, bSkip );
+
+						if ( bSkip == FALSE )
+						{
+							auto Apc = PKAPC( AllocateZeroPool( sizeof( KAPC ) ) );
+							KeInitializeApc(
+								Apc,
+								Entry->Thread,
+								OriginalApcEnvironment,
+								&KernelApcInjectCallback,
+								nullptr,
+								ApcExcInThreadCtx,
+								UserMode,
+								hSyncEvent );
+
+							auto PrepareApc = PKAPC( AllocateZeroPool( sizeof( KAPC ) ) );
+							KeInitializeApc(
+								PrepareApc, Entry->Thread,
+								OriginalApcEnvironment, &KernelApcPrepareCallback,
+								NULL, NULL, KernelMode, NULL
+							);
+
+							const auto ApcBuffer = PTHREAD_CONTEXT_ARGS( AllocateZeroPool( sizeof( THREAD_CONTEXT_ARGS ) ) );
+							if ( ApcBuffer )
+							{
+								ULONG ResultLen = NULL;
+
+								ApcBuffer->Query = TRUE;
+								ApcBuffer->Status = STATUS_TIMEOUT;
+								ApcBuffer->InfoClass = THREADINFOCLASS( Buffer->InformationClass );
+								ApcBuffer->ThreadInfo = Buffer->ThreadInfo;
+								ApcBuffer->ThreadInfoLenght = Buffer->ThreadInfoLenght;
+								ApcBuffer->ReturnLenght = &ResultLen;
+
+								if ( KeInsertQueueApc( Apc, ApcBuffer, nullptr, 0 ) )
+								{
+									KeInsertQueueApc( PrepareApc, NULL, NULL, 0 );
+
+									DBGPRINT( "%s %d : IOCTL_QUERY_THREAD_INFO inserted APC.", __FUNCTION__, __LINE__ );
+									Status = ZwWaitForSingleObject( hSyncEvent, FALSE, nullptr );
+									ZwClose( hSyncEvent );
+								}
+								else
+									DBGPRINT( "%s %d : IOCTL_QUERY_THREAD_INFO failed to insert APC.", __FUNCTION__, __LINE__ );
+
+								if ( NT_SUCCESS( Status ) )
+								{
+									if ( Buffer->ResultLenght )
+										*Buffer->ResultLenght = ResultLen;
+
+									Status = ApcBuffer->Status;
+								}
+
+								ExFreePool( Buffer );
+							}
+						}
+
+						ExReleaseFastMutex( &ExpThreadContextQueryMutex );
+					}*/
